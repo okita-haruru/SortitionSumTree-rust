@@ -2,14 +2,14 @@ use std::collections::HashMap;
 type TypeAddress = u128;
 type TypeKey = u128;
 struct SortitionSumTree {
-    K: u128,
-    stack: Vec<u128>,
+    K: usize,
+    stack: Vec<usize>,
     nodes: Vec<u128>,
-    IDsToNodeIndexes: HashMap<TypeAddress,u128>,
-    nodeIndexesToIDs: HashMap<u128,TypeAddress>,
+    IDsToNodeIndexes: HashMap<TypeAddress,usize>,
+    nodeIndexesToIDs: HashMap<usize,TypeAddress>,
 }
 impl SortitionSumTree{
-    pub fn new(_k:u128)->SortitionSumTree{
+    pub fn new(_k:usize)->SortitionSumTree{
         SortitionSumTree{
             K:_k,
             stack:Vec::new(),
@@ -28,7 +28,7 @@ impl SortitionSumTrees{
      *  @param _key The key of the new tree.
      *  @param _K The max number of children for each node in the new tree.
      */
-    pub fn createTree(&mut self,_key:TypeKey,_K:u128){
+    pub fn createTree(&mut self,_key:TypeKey,_K:usize){
         let mut tree: SortitionSumTree = SortitionSumTree::new(_K);
         tree.nodes.push(0);
         self.sortitionSumTrees.insert(_key, tree);
@@ -41,12 +41,12 @@ impl SortitionSumTrees{
      *  @param _plusOrMinus Wether to add (true) or substract (false).
      *  @param _value The value to add or substract.
      */
-    pub fn updateParents(&mut self,_key:TypeKey,_treeIndex:u128,_plusOrMinus:bool,_value:u128){
+    pub fn updateParents(&mut self,_key:TypeKey,_treeIndex:usize,_plusOrMinus:bool,_value:u128){
         if let Some(tree)=self.sortitionSumTrees.get_mut(&_key){
             let mut parentIndex=_treeIndex;
             while(parentIndex!=0){
                 parentIndex = (parentIndex - 1) / tree.K;
-                tree.nodes[parentIndex as usize] = if _plusOrMinus {tree.nodes[parentIndex as usize] + _value} else {tree.nodes[parentIndex as usize] - _value};
+                tree.nodes[parentIndex] = if _plusOrMinus {tree.nodes[parentIndex] + _value} else {tree.nodes[parentIndex] - _value};
             }
         }
     }
@@ -66,32 +66,32 @@ impl SortitionSumTrees{
                 let treeIndex=_treeIndex.clone();
                 if (_value == 0) {//new value==0
                     //remove
-                    let value = tree.nodes[treeIndex as usize];
-                    tree.nodes[treeIndex.clone() as usize] = 0;
+                    let value = tree.nodes[treeIndex];
+                    tree.nodes[treeIndex.clone()] = 0;
                     tree.stack.push(treeIndex);
                     tree.nodeIndexesToIDs.remove(&treeIndex);
                     let y=treeIndex;
                     tree.IDsToNodeIndexes.remove(&_ID);
                     self.updateParents( _key, treeIndex, false, value);
-                } else if (_value != tree.nodes[treeIndex as usize]) { // New value,and!=0
+                } else if (_value != tree.nodes[treeIndex]) { // New value,and!=0
                     // Set.
-                    let plusOrMinus = tree.nodes[treeIndex as usize] <= _value;
-                    let plusOrMinusValue:u128 = if plusOrMinus {_value - tree.nodes[treeIndex.clone() as usize]} else {tree.nodes[treeIndex.clone() as usize] - _value};
-                    tree.nodes[treeIndex as usize] = _value;
+                    let plusOrMinus = tree.nodes[treeIndex] <= _value;
+                    let plusOrMinusValue:u128 = if plusOrMinus {_value - tree.nodes[treeIndex.clone()]} else {tree.nodes[treeIndex.clone()] - _value};
+                    tree.nodes[treeIndex] = _value;
                     self.updateParents(_key, treeIndex, plusOrMinus, plusOrMinusValue);
                 }   
             }else {
                 if (_value != 0) {//node not exist
-                    let mut treeIndex:u128=0;
+                    let mut treeIndex:usize=0;
                     if (tree.stack.len() == 0) {//no vacant node
-                        treeIndex = tree.nodes.len() as u128;
+                        treeIndex = tree.nodes.len();
                         tree.nodes.push(_value);
                         if (treeIndex != 1 && (treeIndex - 1) % tree.K == 0) {//is the first node of a layer
                             //move the parent  down
                             let parentIndex = treeIndex / tree.K;
                             let parentID : TypeAddress= tree.nodeIndexesToIDs[&parentIndex];
-                            let newIndex:u128= treeIndex + 1;
-                            tree.nodes.push(tree.nodes[parentIndex as usize]);
+                            let newIndex= treeIndex + 1;
+                            tree.nodes.push(tree.nodes[parentIndex]);
                             tree.nodeIndexesToIDs.remove(&parentIndex);
                             tree.IDsToNodeIndexes.insert(parentID,newIndex);
                             tree.nodeIndexesToIDs.insert(newIndex,parentID);
@@ -99,7 +99,7 @@ impl SortitionSumTrees{
                     } else {//vacant node
                         treeIndex = tree.stack[tree.stack.len() - 1];
                         tree.stack.pop();
-                        tree.nodes[treeIndex as usize] = _value;
+                        tree.nodes[treeIndex] = _value;
                     }
                     tree.IDsToNodeIndexes.insert(_ID,treeIndex);
                     tree.nodeIndexesToIDs.insert(treeIndex,_ID);    
@@ -118,7 +118,7 @@ impl SortitionSumTrees{
     pub fn stakeOf(&self,_key:TypeKey,_ID:TypeAddress)->u128{
         if let Some(tree)=self.sortitionSumTrees.get(&_key){
             if let Some(treeIndex)=tree.IDsToNodeIndexes.get(&_ID){
-                return tree.nodes[*treeIndex as usize];
+                return tree.nodes[*treeIndex];
             }else {
                 return 0;
             }
@@ -138,12 +138,12 @@ impl SortitionSumTrees{
      */
     pub fn draw(&self,_key:TypeKey,_drawnNumber:u128)->TypeAddress{
         if let Some(tree)=self.sortitionSumTrees.get(&_key){
-            let mut treeIndex:u128=0;
+            let mut treeIndex:usize=0;
             let mut currentDrawnNumber=_drawnNumber%tree.nodes[0];
-            while((tree.K*treeIndex)+1<tree.nodes.len() as u128){
+            while((tree.K*treeIndex)+1<tree.nodes.len()){
                 for i in (1..=tree.K){
-                    let nodeIndex:u128=(tree.K*treeIndex)+i;
-                    let nodeValue:u128=tree.nodes[nodeIndex as usize];
+                    let nodeIndex=(tree.K*treeIndex)+i;
+                    let nodeValue=tree.nodes[nodeIndex];
                     if currentDrawnNumber>=nodeValue {
                         currentDrawnNumber=currentDrawnNumber-nodeValue;
                     }else{
@@ -169,21 +169,21 @@ impl SortitionSumTrees{
      *  `O(n)` where
      *  `n` is the maximum number of nodes ever appended.
      */
-    pub fn queryLeaves(&self,_key:TypeKey,_cursor:u128,_count:u128)->(u128,Vec<u128>,bool){
-        let mut startIndex:u128=0;
+    pub fn queryLeaves(&self,_key:TypeKey,_cursor:usize,_count:usize)->(usize,Vec<u128>,bool){
+        let mut startIndex:usize=0;
         let mut values:Vec<u128>=Vec::new();
         let mut hasMore:bool=false;
         if let Some(tree)=self.sortitionSumTrees.get(&_key){
-            for i in 1..=tree.nodes.len() as u128{
-                if (tree.K*i)+1>=tree.nodes.len() as u128{
+            for i in 1..=tree.nodes.len(){
+                if (tree.K)+1>=tree.nodes.len(){
                     startIndex=i;
                     break;
                 }
             }
             let loopStartIndex=startIndex+_cursor;
-            for j in loopStartIndex..tree.nodes.len() as u128{
-                if values.len() < _count as usize{
-                    values.push(tree.nodes[j as usize]);
+            for j in loopStartIndex..tree.nodes.len(){
+                if values.len() < _count{
+                    values.push(tree.nodes[j]);
                 }else{
                     hasMore=true;
                     break;
