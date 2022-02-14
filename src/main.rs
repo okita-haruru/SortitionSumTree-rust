@@ -17,9 +17,9 @@ include!("sortitionSumTree.rs");
         assert_eq!(tree.unwrap().nodes[4],25);
         assert_eq!(tree.unwrap().nodes[5],25);
         assert_eq!(tree.unwrap().nodes[6],25);
-        assert_eq!( trees.draw(1, 35),1 as TypeAddress);
-        assert_eq!(trees.stakeOf(1, 1 as TypeAddress),25);
+        assert_eq!( trees.draw(1, 35),1);
+        assert_eq!(trees.stakeOf(1, 1),25);
         trees.set(1, 0, 1);
-        assert_eq!(trees.stakeOf(1, 1 as TypeAddress),0);
+        assert_eq!(trees.stakeOf(1, 1),0);
      }
 fn main() {}
