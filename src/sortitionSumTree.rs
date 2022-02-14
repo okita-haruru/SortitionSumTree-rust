@@ -70,7 +70,6 @@ impl SortitionSumTrees{
                     tree.nodes[treeIndex.clone()] = 0;
                     tree.stack.push(treeIndex);
                     tree.nodeIndexesToIDs.remove(&treeIndex);
-                    let y=treeIndex;
                     tree.IDsToNodeIndexes.remove(&_ID);
                     self.updateParents( _key, treeIndex, false, value);
                 } else if (_value != tree.nodes[treeIndex]) { // New value,and!=0
