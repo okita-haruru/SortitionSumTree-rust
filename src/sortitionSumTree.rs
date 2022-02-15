@@ -85,7 +85,7 @@ impl SortitionSumTrees{
                     if (tree.stack.len() == 0) {//no vacant node
                         treeIndex = tree.nodes.len();
                         tree.nodes.push(_value);
-                        if (treeIndex != 1 && (treeIndex - 1) % tree.K == 0) {//is the first node of a layer
+                        if (treeIndex != 1 && (treeIndex - 1) % tree.K == 0) {//is the first child node.
                             //move the parent  down
                             let parentIndex = treeIndex / tree.K;
                             let parentID : TypeAddress= tree.nodeIndexesToIDs[&parentIndex];
